@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 
@@ -32,7 +33,21 @@ public class UserBootstrap implements ApplicationRunner {
     }
 
     @Override
+    @Transactional
     public void run(ApplicationArguments args) {
+        var existing = users.findByEmail(DEFAULT_EMAIL);
+        if (existing.isPresent()) {
+            if (configuredKey != null && !configuredKey.isBlank()) {
+                String configuredHash = tokenGenerator.sha256(configuredKey);
+                User user = existing.get();
+                if (!configuredHash.equals(user.getApiKeyHash())) {
+                    user.rotateApiKey(configuredHash);
+                    users.save(user);
+                    log.info("Rotated configured API key for {}", DEFAULT_EMAIL);
+                }
+            }
+            return;
+        }
         if (users.count() > 0) {
             return;
         }
