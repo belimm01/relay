@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: relay
+  datasource:
+    url: ${RELAY_DB_URL:jdbc:postgresql://localhost:5432/relay}
+    username: ${RELAY_DB_USER:relay}
+    password: ${RELAY_DB_PASSWORD:relay}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+server:
+  port: ${RELAY_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+relay:
+  delivery:
+    connect-timeout: 5s
+    read-timeout: 10s
+    max-attempts: 6
+    initial-backoff: 1s
+    max-backoff: 5m
