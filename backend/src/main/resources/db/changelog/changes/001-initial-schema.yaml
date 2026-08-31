@@ -1,0 +1,158 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users
+      author: mykyta
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column: {name: id, type: uuid, constraints: {primaryKey: true, nullable: false}}
+              - column: {name: email, type: varchar(320), constraints: {nullable: false, unique: true}}
+              - column: {name: api_key_hash, type: varchar(255), constraints: {nullable: false}}
+              - column: {name: created_at, type: timestamptz, constraints: {nullable: false}}
+
+  - changeSet:
+      id: 001-create-endpoints
+      author: mykyta
+      changes:
+        - createTable:
+            tableName: endpoints
+            columns:
+              - column: {name: id, type: uuid, constraints: {primaryKey: true, nullable: false}}
+              - column: {name: user_id, type: uuid, constraints: {nullable: false}}
+              - column: {name: name, type: varchar(140), constraints: {nullable: false}}
+              - column: {name: ingest_token, type: varchar(64), constraints: {nullable: false, unique: true}}
+              - column: {name: active, type: boolean, defaultValueBoolean: true, constraints: {nullable: false}}
+              - column: {name: created_at, type: timestamptz, constraints: {nullable: false}}
+        - addForeignKeyConstraint:
+            baseTableName: endpoints
+            baseColumnNames: user_id
+            constraintName: fk_endpoints_user
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 001-create-destinations
+      author: mykyta
+      changes:
+        - createTable:
+            tableName: destinations
+            columns:
+              - column: {name: id, type: uuid, constraints: {primaryKey: true, nullable: false}}
+              - column: {name: endpoint_id, type: uuid, constraints: {nullable: false}}
+              - column: {name: name, type: varchar(140)}
+              - column: {name: target_url, type: varchar(2048), constraints: {nullable: false}}
+              - column: {name: filter_expr, type: varchar(2048)}
+              - column: {name: active, type: boolean, defaultValueBoolean: true, constraints: {nullable: false}}
+              - column: {name: created_at, type: timestamptz, constraints: {nullable: false}}
+        - addForeignKeyConstraint:
+            baseTableName: destinations
+            baseColumnNames: endpoint_id
+            constraintName: fk_destinations_endpoint
+            referencedTableName: endpoints
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 001-create-events
+      author: mykyta
+      changes:
+        - createTable:
+            tableName: events
+            columns:
+              - column: {name: id, type: uuid, constraints: {primaryKey: true, nullable: false}}
+              - column: {name: endpoint_id, type: uuid, constraints: {nullable: false}}
+              - column: {name: method, type: varchar(10), constraints: {nullable: false}}
+              - column: {name: path, type: varchar(2048)}
+              - column: {name: query_string, type: varchar(4096)}
+              - column: {name: headers, type: jsonb, constraints: {nullable: false}}
+              - column: {name: body, type: text}
+              - column: {name: content_type, type: varchar(255)}
+              - column: {name: source_ip, type: varchar(45)}
+              - column: {name: received_at, type: timestamptz, constraints: {nullable: false}}
+        - addForeignKeyConstraint:
+            baseTableName: events
+            baseColumnNames: endpoint_id
+            constraintName: fk_events_endpoint
+            referencedTableName: endpoints
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - createIndex:
+            tableName: events
+            indexName: idx_events_endpoint_received
+            columns:
+              - column: {name: endpoint_id}
+              - column: {name: received_at, descending: true}
+
+  - changeSet:
+      id: 001-create-deliveries
+      author: mykyta
+      changes:
+        - createTable:
+            tableName: deliveries
+            columns:
+              - column: {name: id, type: uuid, constraints: {primaryKey: true, nullable: false}}
+              - column: {name: event_id, type: uuid, constraints: {nullable: false}}
+              - column: {name: destination_id, type: uuid, constraints: {nullable: false}}
+              - column: {name: status, type: varchar(20), constraints: {nullable: false}}
+              - column: {name: attempt_count, type: int, defaultValueNumeric: 0, constraints: {nullable: false}}
+              - column: {name: next_attempt_at, type: timestamptz}
+              - column: {name: last_response_code, type: int}
+              - column: {name: last_error, type: varchar(1024)}
+              - column: {name: created_at, type: timestamptz, constraints: {nullable: false}}
+              - column: {name: updated_at, type: timestamptz, constraints: {nullable: false}}
+        - addForeignKeyConstraint:
+            baseTableName: deliveries
+            baseColumnNames: event_id
+            constraintName: fk_deliveries_event
+            referencedTableName: events
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: deliveries
+            baseColumnNames: destination_id
+            constraintName: fk_deliveries_destination
+            referencedTableName: destinations
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: deliveries
+            columnNames: event_id, destination_id
+            constraintName: uq_deliveries_event_destination
+        - createIndex:
+            tableName: deliveries
+            indexName: idx_deliveries_due
+            columns:
+              - column: {name: status}
+              - column: {name: next_attempt_at}
+
+  - changeSet:
+      id: 001-create-delivery-attempts
+      author: mykyta
+      changes:
+        - createTable:
+            tableName: delivery_attempts
+            columns:
+              - column: {name: id, type: uuid, constraints: {primaryKey: true, nullable: false}}
+              - column: {name: delivery_id, type: uuid, constraints: {nullable: false}}
+              - column: {name: attempt_no, type: int, constraints: {nullable: false}}
+              - column: {name: status, type: varchar(20), constraints: {nullable: false}}
+              - column: {name: response_code, type: int}
+              - column: {name: response_body, type: text}
+              - column: {name: error_message, type: varchar(1024)}
+              - column: {name: latency_ms, type: int}
+              - column: {name: attempted_at, type: timestamptz, constraints: {nullable: false}}
+        - addForeignKeyConstraint:
+            baseTableName: delivery_attempts
+            baseColumnNames: delivery_id
+            constraintName: fk_attempts_delivery
+            referencedTableName: deliveries
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - createIndex:
+            tableName: delivery_attempts
+            indexName: idx_attempts_delivery
+            columns:
+              - column: {name: delivery_id}
+              - column: {name: attempt_no}
