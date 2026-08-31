@@ -59,12 +59,24 @@ public class Destination {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getTargetUrl() {
         return targetUrl;
     }
 
+    public void setTargetUrl(String targetUrl) {
+        this.targetUrl = targetUrl;
+    }
+
     public String getFilterExpr() {
         return filterExpr;
+    }
+
+    public void setFilterExpr(String filterExpr) {
+        this.filterExpr = filterExpr;
     }
 
     public boolean isActive() {
