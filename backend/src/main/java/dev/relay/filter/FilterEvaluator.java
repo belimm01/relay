@@ -98,7 +98,7 @@ public class FilterEvaluator {
             return op.equals("!=");
         }
         String literal = unquote(rawLiteral);
-        Double leftNumber = value.isNumber() ? value.asDouble() : parseNumber(value.asText());
+        Double leftNumber = value.isNumber() ? Double.valueOf(value.asDouble()) : parseNumber(value.asText());
         Double rightNumber = parseNumber(literal);
         boolean numeric = leftNumber != null && rightNumber != null;
 
