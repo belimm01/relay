@@ -7,8 +7,10 @@ import dev.relay.destination.DestinationRepository;
 import dev.relay.endpoint.Endpoint;
 import dev.relay.endpoint.EndpointRepository;
 import dev.relay.event.Event;
+import dev.relay.event.EventCaptured;
 import dev.relay.event.EventRepository;
 import dev.relay.filter.FilterEvaluator;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class IngestService {
     private final DestinationRepository destinations;
     private final DeliveryRepository deliveries;
     private final FilterEvaluator filterEvaluator;
+    private final ApplicationEventPublisher publisher;
     private final Clock clock;
 
     public IngestService(EndpointRepository endpoints,
@@ -31,12 +34,14 @@ public class IngestService {
                          DestinationRepository destinations,
                          DeliveryRepository deliveries,
                          FilterEvaluator filterEvaluator,
+                         ApplicationEventPublisher publisher,
                          Clock clock) {
         this.endpoints = endpoints;
         this.events = events;
         this.destinations = destinations;
         this.deliveries = deliveries;
         this.filterEvaluator = filterEvaluator;
+        this.publisher = publisher;
         this.clock = clock;
     }
 
@@ -69,6 +74,8 @@ public class IngestService {
                 deliveries.save(new Delivery(event.getId(), target.getId(), now));
             }
         }
+
+        publisher.publishEvent(new EventCaptured(endpoint.getId(), event.getId()));
         return event;
     }
 }
