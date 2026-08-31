@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   backend:
     name: Backend
@@ -36,3 +39,12 @@ jobs:
       - name: Type-check and build
         working-directory: frontend
         run: npm run build
+
+  helm:
+    name: Helm chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - run: helm lint deploy/helm/relay
+      - run: helm template relay deploy/helm/relay > /tmp/relay.yaml

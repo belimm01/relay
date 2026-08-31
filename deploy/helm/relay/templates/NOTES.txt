@@ -1,0 +1,6 @@
+Relay is available inside the cluster at:
+  http://{{ include "relay.fullname" . }}:{{ .Values.service.port }}
+
+The chart intentionally does not create database or bootstrap secrets. Supply:
+  {{ .Values.database.existingSecret }}/{{ .Values.database.passwordKey }}
+  {{ .Values.bootstrap.existingSecret }}/{{ .Values.bootstrap.key }}

@@ -8,7 +8,9 @@ COPY src ./src
 RUN mvn -q -B clean package -DskipTests
 
 FROM eclipse-temurin:21-jre
+RUN useradd --system --uid 10001 --create-home relay
 WORKDIR /app
-COPY --from=build /app/target/relay-*.jar app.jar
+COPY --from=build --chown=10001:10001 /app/target/relay-*.jar app.jar
+USER 10001
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

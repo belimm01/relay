@@ -1,0 +1,33 @@
+replicaCount: 1
+
+backend:
+  image:
+    repository: ghcr.io/belimm01/relay-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests: {cpu: 250m, memory: 384Mi}
+    limits: {cpu: "1", memory: 768Mi}
+
+frontend:
+  image:
+    repository: ghcr.io/belimm01/relay-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests: {cpu: 25m, memory: 32Mi}
+    limits: {cpu: 200m, memory: 128Mi}
+
+database:
+  url: jdbc:postgresql://postgresql:5432/relay
+  user: relay
+  existingSecret: relay-database
+  passwordKey: password
+
+bootstrap:
+  existingSecret: relay-bootstrap
+  key: api-key
+
+service:
+  type: ClusterIP
+  port: 80
