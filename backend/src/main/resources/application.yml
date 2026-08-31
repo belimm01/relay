@@ -1,6 +1,9 @@
 spring:
   application:
     name: relay
+  threads:
+    virtual:
+      enabled: true
   datasource:
     url: ${RELAY_DB_URL:jdbc:postgresql://localhost:5432/relay}
     username: ${RELAY_DB_USER:relay}
