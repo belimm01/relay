@@ -8,6 +8,7 @@ import dev.relay.endpoint.Endpoint;
 import dev.relay.endpoint.EndpointRepository;
 import dev.relay.event.Event;
 import dev.relay.event.EventRepository;
+import dev.relay.filter.FilterEvaluator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,17 +23,20 @@ public class IngestService {
     private final EventRepository events;
     private final DestinationRepository destinations;
     private final DeliveryRepository deliveries;
+    private final FilterEvaluator filterEvaluator;
     private final Clock clock;
 
     public IngestService(EndpointRepository endpoints,
                          EventRepository events,
                          DestinationRepository destinations,
                          DeliveryRepository deliveries,
+                         FilterEvaluator filterEvaluator,
                          Clock clock) {
         this.endpoints = endpoints;
         this.events = events;
         this.destinations = destinations;
         this.deliveries = deliveries;
+        this.filterEvaluator = filterEvaluator;
         this.clock = clock;
     }
 
@@ -61,7 +65,9 @@ public class IngestService {
 
         List<Destination> targets = destinations.findByEndpointIdAndActiveTrue(endpoint.getId());
         for (Destination target : targets) {
-            deliveries.save(new Delivery(event.getId(), target.getId(), now));
+            if (filterEvaluator.matches(target.getFilterExpr(), event)) {
+                deliveries.save(new Delivery(event.getId(), target.getId(), now));
+            }
         }
         return event;
     }
