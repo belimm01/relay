@@ -87,8 +87,14 @@ public class Delivery {
         }
     }
 
+    /**
+     * Resets this delivery for a manual replay: fresh retry budget, due immediately.
+     */
     public void requeue(Instant now) {
         this.status = DeliveryStatus.PENDING;
+        this.attemptCount = 0;
+        this.lastError = null;
+        this.lastResponseCode = null;
         this.nextAttemptAt = now;
         this.updatedAt = now;
     }
