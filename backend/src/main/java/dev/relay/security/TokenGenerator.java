@@ -9,10 +9,6 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
 
-/**
- * Generates opaque tokens (ingest tokens, API keys) and hashes secrets for
- * storage. Keys are only ever shown once; the database keeps the hash.
- */
 @Component
 public class TokenGenerator {
 

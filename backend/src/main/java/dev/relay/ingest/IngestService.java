@@ -45,10 +45,6 @@ public class IngestService {
         this.clock = clock;
     }
 
-    /**
-     * Persists an inbound request as an immutable event and queues one delivery per
-     * active destination. Returns fast; the actual forwarding happens out of band.
-     */
     @Transactional
     public Event capture(String token, IngestCommand command) {
         Endpoint endpoint = endpoints.findByIngestToken(token)

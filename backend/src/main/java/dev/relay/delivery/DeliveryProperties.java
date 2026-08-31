@@ -7,25 +7,18 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "relay.delivery")
 public class DeliveryProperties {
 
-    /** How long to wait establishing a connection to a destination. */
     private Duration connectTimeout = Duration.ofSeconds(5);
 
-    /** How long to wait for a response once connected. */
     private Duration readTimeout = Duration.ofSeconds(10);
 
-    /** Total attempts before a delivery is dead-lettered. */
     private int maxAttempts = 6;
 
-    /** Delay before the first retry; doubles each subsequent attempt. */
     private Duration initialBackoff = Duration.ofSeconds(1);
 
-    /** Upper bound on any single backoff interval. */
     private Duration maxBackoff = Duration.ofMinutes(5);
 
-    /** How many due deliveries a single poll claims. */
     private int batchSize = 50;
 
-    /** How long a claimed delivery is hidden from other pollers while in flight. */
     private Duration lease = Duration.ofSeconds(30);
 
     public Duration getConnectTimeout() {

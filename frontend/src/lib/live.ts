@@ -5,11 +5,6 @@ import type { EventSummary } from '@/api/types'
 
 export type LiveState = 'connecting' | 'live' | 'closed'
 
-/**
- * Subscribes to the per-endpoint event stream over STOMP/SockJS and invokes
- * {@link onEvent} for every event captured after the connection opens. The
- * connection is torn down automatically when the owning component unmounts.
- */
 export function useEventStream(
   endpointId: () => string,
   onEvent: (event: EventSummary) => void,

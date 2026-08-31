@@ -7,19 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.relay.event.Event;
 import org.springframework.stereotype.Component;
 
-/**
- * Evaluates a destination filter against an event. Expressions are a small,
- * deliberately non-executable DSL: one or more clauses joined by {@code &&},
- * each of the form {@code <path> <op> <value>}, e.g.
- *
- * <pre>
- *   body.type == "payment.succeeded"
- *   body.amount &gt;= 100 &amp;&amp; headers.X-Env == "prod"
- * </pre>
- *
- * Paths address the parsed JSON body ({@code body.*}) or request headers
- * ({@code headers.*}). A blank filter matches everything.
- */
 @Component
 public class FilterEvaluator {
 

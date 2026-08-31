@@ -16,7 +16,6 @@ class BackoffPolicyTest {
     void appliesExponentialGrowthWithoutJitter() {
         BackoffPolicy policy = new BackoffPolicy(Duration.ofSeconds(1), Duration.ofMinutes(5), NO_JITTER);
 
-        // With zero jitter the delay is exactly half the exponential step.
         assertThat(policy.nextDelay(1)).isEqualTo(Duration.ofMillis(500));
         assertThat(policy.nextDelay(2)).isEqualTo(Duration.ofMillis(1000));
         assertThat(policy.nextDelay(3)).isEqualTo(Duration.ofMillis(2000));

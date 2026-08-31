@@ -10,11 +10,6 @@ import org.springframework.web.client.RestClient;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 
-/**
- * Forwards a captured event to a destination, preserving the original method and
- * body. Non-2xx responses are returned as results (not thrown) so the dispatcher
- * can decide whether to retry.
- */
 @Component
 public class WebhookSender {
 

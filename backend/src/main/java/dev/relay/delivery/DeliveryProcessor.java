@@ -11,10 +11,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Performs a single delivery attempt and records the outcome. Each call runs in
- * its own transaction so one poor destination never blocks the rest of the batch.
- */
 @Component
 public class DeliveryProcessor {
 

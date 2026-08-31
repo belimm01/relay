@@ -17,7 +17,6 @@ async function submit() {
   busy.value = true
   auth.signIn(key.value)
   try {
-    // Validate the key against a guarded endpoint before committing to the app.
     await api.listEndpoints()
     const redirect = (route.query.redirect as string) ?? '/'
     router.push(redirect)

@@ -17,11 +17,6 @@ public interface DeliveryRepository extends JpaRepository<Delivery, UUID> {
 
     List<Delivery> findByEventIdOrderByCreatedAt(UUID eventId);
 
-    /**
-     * Claims a batch of deliveries that are due to run. The pessimistic write lock
-     * combined with the SKIP_LOCKED hint lets several workers poll concurrently
-     * without ever picking up the same row.
-     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2"))
     @Query("""

@@ -9,11 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-/**
- * Pushes newly captured events to subscribers of
- * {@code /topic/endpoints/{endpointId}/events}. Runs after commit so the
- * dashboard never receives an event it cannot yet read back.
- */
 @Component
 public class EventBroadcaster {
 

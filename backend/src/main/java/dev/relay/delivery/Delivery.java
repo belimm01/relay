@@ -11,10 +11,6 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Tracks the delivery of one event to one destination across its retry lifecycle.
- * Individual HTTP attempts are recorded as {@link DeliveryAttempt} rows.
- */
 @Entity
 @Table(name = "deliveries")
 public class Delivery {
@@ -87,9 +83,6 @@ public class Delivery {
         }
     }
 
-    /**
-     * Resets this delivery for a manual replay: fresh retry budget, due immediately.
-     */
     public void requeue(Instant now) {
         this.status = DeliveryStatus.PENDING;
         this.attemptCount = 0;
@@ -99,10 +92,6 @@ public class Delivery {
         this.updatedAt = now;
     }
 
-    /**
-     * Hides this delivery from other pollers until {@code leaseUntil} while it is
-     * being processed. If the worker dies, the lease expires and it is retried.
-     */
     public void lease(Instant leaseUntil, Instant now) {
         this.nextAttemptAt = leaseUntil;
         this.updatedAt = now;

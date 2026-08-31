@@ -12,10 +12,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * An inbound request captured on an endpoint. Events are immutable once written;
- * the durable log is the source of truth for replays.
- */
 @Entity
 @Table(name = "events")
 public class Event {

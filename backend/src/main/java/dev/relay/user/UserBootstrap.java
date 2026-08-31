@@ -10,11 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 
-/**
- * Ensures a single administrative user exists on first run. When no key is
- * configured a random one is generated and logged once so the dashboard can be
- * used immediately in development.
- */
 @Component
 public class UserBootstrap implements ApplicationRunner {
 

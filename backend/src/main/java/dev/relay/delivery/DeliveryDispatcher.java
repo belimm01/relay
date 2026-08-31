@@ -8,10 +8,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
-/**
- * Claims a batch of due deliveries and fans them out to the virtual-thread pool.
- * Driven by {@link DeliveryScheduler}; also safe to invoke directly (e.g. tests).
- */
 @Component
 public class DeliveryDispatcher {
 
@@ -29,9 +25,6 @@ public class DeliveryDispatcher {
         this.deliveryExecutor = deliveryExecutor;
     }
 
-    /**
-     * @return the number of deliveries claimed and handed off in this cycle
-     */
     public int dispatch() {
         List<UUID> claimed = queue.claimDue();
         for (UUID deliveryId : claimed) {
@@ -44,7 +37,6 @@ public class DeliveryDispatcher {
         try {
             processor.process(deliveryId);
         } catch (Exception ex) {
-            // The lease will expire and the delivery will be retried on a later poll.
             log.warn("Delivery {} failed to process; will retry after lease expiry", deliveryId, ex);
         }
     }

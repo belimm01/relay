@@ -4,8 +4,6 @@ import vue from '@vitejs/plugin-vue'
 
 const backend = process.env.RELAY_BACKEND_URL ?? 'http://localhost:8080'
 
-// Proxy the API and websocket to the backend in development so the app can
-// call same-origin paths and avoid CORS entirely.
 export default defineConfig({
   plugins: [vue()],
   resolve: {

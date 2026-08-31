@@ -14,10 +14,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Accepts inbound webhooks on any HTTP method and captures them for forwarding.
- * The response is intentionally minimal and fast: senders only need a 2xx.
- */
 @RestController
 public class IngestController {
 

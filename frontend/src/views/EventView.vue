@@ -23,7 +23,6 @@ async function replay() {
   try {
     const result = await api.replayEvent(props.id)
     replayNote.value = `Re-queued ${result.queued} delivery(ies).`
-    // Refresh to show the fresh attempts as they land.
     await load()
   } finally {
     replaying.value = false
