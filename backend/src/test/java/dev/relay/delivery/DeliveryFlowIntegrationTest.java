@@ -51,7 +51,6 @@ class DeliveryFlowIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        // Fast, deterministic retries and no background poller interference.
         registry.add("relay.delivery.initial-backoff", () -> "10ms");
         registry.add("relay.delivery.max-backoff", () -> "50ms");
         registry.add("relay.delivery.poll-interval", () -> "3600000");
@@ -98,7 +97,6 @@ class DeliveryFlowIntegrationTest {
     }
 
     private Endpoint newEndpointWithDestination() {
-        // Unique email per test: the Postgres container is shared across methods.
         User user = users.save(new User(
                 tokenGenerator.newToken() + "@relay.local", tokenGenerator.sha256("k"), clock.instant()));
         Endpoint endpoint = endpoints.save(
@@ -149,7 +147,6 @@ class DeliveryFlowIntegrationTest {
         Event event = onlyEventFor(endpoint);
         Delivery delivery = deliveries.findByEventIdOrderByCreatedAt(event.getId()).get(0);
 
-        // Repeatedly poll: the first attempt fails (500), the retry succeeds (200).
         await(Duration.ofSeconds(5), () -> {
             dispatcher.dispatch();
             return statusOf(delivery.getId()) == DeliveryStatus.DELIVERED;

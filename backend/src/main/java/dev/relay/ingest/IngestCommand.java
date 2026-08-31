@@ -2,9 +2,6 @@ package dev.relay.ingest;
 
 import java.util.Map;
 
-/**
- * Everything captured from a raw inbound request, independent of the servlet API.
- */
 public record IngestCommand(
         String method,
         String path,

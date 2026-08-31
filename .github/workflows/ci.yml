@@ -16,8 +16,6 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      # Docker is available on the runner, so the Testcontainers
-      # integration tests run as part of the standard build.
       - name: Build and test
         working-directory: backend
         run: mvn -B verify

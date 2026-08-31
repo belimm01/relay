@@ -15,10 +15,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Optional;
 
-/**
- * Authenticates management API calls by a shared API key sent in {@code X-Api-Key}.
- * Only guards {@code /api/**}; ingest and actuator endpoints are left open.
- */
 @Component
 public class ApiKeyAuthFilter extends OncePerRequestFilter {
 

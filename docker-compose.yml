@@ -19,7 +19,6 @@ services:
       RELAY_DB_URL: jdbc:postgresql://db:5432/relay
       RELAY_DB_USER: relay
       RELAY_DB_PASSWORD: relay
-      # Set a known key so you can sign in without reading the logs.
       RELAY_BOOTSTRAP_API_KEY: ${RELAY_BOOTSTRAP_API_KEY:-rk_local_dev_key}
     depends_on:
       db:

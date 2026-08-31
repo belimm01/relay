@@ -5,9 +5,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-/**
- * Holds the user resolved for the current request by {@link ApiKeyAuthFilter}.
- */
 @Component
 @RequestScope
 public class CurrentUser {

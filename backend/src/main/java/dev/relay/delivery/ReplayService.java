@@ -12,11 +12,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Re-queues an event for delivery. Existing deliveries are reset for a fresh
- * attempt; if none exist yet (e.g. destinations were added later) new ones are
- * created for the endpoint's active destinations.
- */
 @Service
 public class ReplayService {
 

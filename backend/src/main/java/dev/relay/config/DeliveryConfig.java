@@ -35,10 +35,6 @@ public class DeliveryConfig {
                 () -> ThreadLocalRandom.current().nextDouble());
     }
 
-    /**
-     * Deliveries run on virtual threads: each in-flight webhook is cheap, so we can
-     * hold thousands of blocked HTTP calls without exhausting platform threads.
-     */
     @Bean(destroyMethod = "close")
     public ExecutorService deliveryExecutor() {
         return Executors.newVirtualThreadPerTaskExecutor();

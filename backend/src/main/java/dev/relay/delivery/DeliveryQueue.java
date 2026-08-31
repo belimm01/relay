@@ -9,11 +9,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Claims due deliveries and leases them so concurrent pollers never process the
- * same row. Kept separate from the dispatcher so the claim runs in its own
- * committed transaction before any work is handed to a worker thread.
- */
 @Component
 public class DeliveryQueue {
 

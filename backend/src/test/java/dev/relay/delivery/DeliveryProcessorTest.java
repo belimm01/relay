@@ -81,7 +81,6 @@ class DeliveryProcessorTest {
 
         assertThat(delivery.getStatus()).isEqualTo(DeliveryStatus.RETRYING);
         assertThat(delivery.getAttemptCount()).isEqualTo(1);
-        // First failure: half of the 1s initial step with zero jitter.
         assertThat(delivery.getNextAttemptAt()).isEqualTo(clock.instant().plusMillis(500));
     }
 

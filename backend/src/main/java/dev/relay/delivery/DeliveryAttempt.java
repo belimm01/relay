@@ -9,9 +9,6 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Immutable record of a single HTTP attempt made for a {@link Delivery}.
- */
 @Entity
 @Table(name = "delivery_attempts")
 public class DeliveryAttempt {
