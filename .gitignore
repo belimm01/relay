@@ -1,0 +1,28 @@
+# Build output
+target/
+dist/
+build/
+*.class
+
+# Node
+node_modules/
+.npm/
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+*.local.env
+
+# IDE / editor
+.idea/
+*.iml
+.vscode/
+*.swp
+.DS_Store
+
+# Test / coverage
+coverage/
+*.lcov
+.nyc_output/
