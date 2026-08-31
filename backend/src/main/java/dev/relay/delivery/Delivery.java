@@ -93,6 +93,15 @@ public class Delivery {
         this.updatedAt = now;
     }
 
+    /**
+     * Hides this delivery from other pollers until {@code leaseUntil} while it is
+     * being processed. If the worker dies, the lease expires and it is retried.
+     */
+    public void lease(Instant leaseUntil, Instant now) {
+        this.nextAttemptAt = leaseUntil;
+        this.updatedAt = now;
+    }
+
     private static String truncate(String error) {
         if (error == null) {
             return null;
