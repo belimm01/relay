@@ -113,11 +113,31 @@ machine. The Testcontainers suite spins up a real Postgres and exercises the
 whole ingest-to-delivery path, including the retry loop, against a stub HTTP
 server.
 
+## Production engineering
+
+- [ADR: PostgreSQL durable delivery queue](docs/adr/0001-postgres-delivery-queue.md) records the consistency and scaling trade-offs.
+- [Service objectives](docs/slo.md) define ingest availability, latency, delivery freshness, and the required dashboards.
+- [Operations runbook](docs/runbook.md) covers backlog recovery, repeated destination failures, migrations, and key rotation.
+- Prometheus metrics are available at `/actuator/prometheus`; Kubernetes probes use the dedicated Actuator liveness/readiness endpoints.
+- `performance/ingest.js` is a k6 arrival-rate scenario with explicit error-rate and p99 thresholds.
+
+## Kubernetes
+
+The Helm chart under `deploy/helm/relay` deploys separate backend and frontend workloads with non-root security contexts, health probes, resource guarantees, and externally managed secrets. It deliberately does not create PostgreSQL or place credentials in values.
+
+```bash
+helm lint deploy/helm/relay
+helm template relay deploy/helm/relay > /tmp/relay.yaml
+```
+
+The default image coordinates are examples; build and publish the two repository Dockerfiles or override the image repositories and immutable tags.
+
 ## Roadmap
 
 - [x] Phase 1 — inbound capture, durable event log, single-destination forward
 - [x] Phase 2 — async delivery, retries with backoff, filtering, replay
 - [x] Phase 3 — live dashboard over WebSockets, Testcontainers integration tests, CI
+- [ ] Publish signed multi-architecture images and a versioned Helm release
 
 ## License
 
