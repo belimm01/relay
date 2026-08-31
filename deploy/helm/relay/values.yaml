@@ -3,7 +3,7 @@ replicaCount: 1
 backend:
   image:
     repository: ghcr.io/belimm01/relay-backend
-    tag: latest
+    tag: "0.1.0"
     pullPolicy: IfNotPresent
   resources:
     requests: {cpu: 250m, memory: 384Mi}
@@ -12,7 +12,7 @@ backend:
 frontend:
   image:
     repository: ghcr.io/belimm01/relay-frontend
-    tag: latest
+    tag: "0.1.0"
     pullPolicy: IfNotPresent
   resources:
     requests: {cpu: 25m, memory: 32Mi}

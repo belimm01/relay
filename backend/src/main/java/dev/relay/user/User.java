@@ -47,6 +47,10 @@ public class User {
         return apiKeyHash;
     }
 
+    public void rotateApiKey(String apiKeyHash) {
+        this.apiKeyHash = Objects.requireNonNull(apiKeyHash);
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }

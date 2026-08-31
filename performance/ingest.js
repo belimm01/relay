@@ -2,6 +2,7 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 
 export const options = {
+  systemTags: ["status", "method", "name", "scenario"],
   scenarios: {
     ingest: {
       executor: "constant-arrival-rate",
@@ -23,7 +24,10 @@ const token = __ENV.INGEST_TOKEN;
 
 export default function () {
   if (!token) throw new Error("INGEST_TOKEN is required");
-  const response = http.post(`${base}/in/${token}`, JSON.stringify({type: "load.test", sentAt: Date.now()}), {headers: {"Content-Type": "application/json"}});
+  const response = http.post(`${base}/in/${token}`, JSON.stringify({type: "load.test", sentAt: Date.now()}), {
+    headers: {"Content-Type": "application/json"},
+    tags: {name: "POST /in/:token"},
+  });
   check(response, {"accepted": (r) => r.status === 202});
   sleep(0.01);
 }
