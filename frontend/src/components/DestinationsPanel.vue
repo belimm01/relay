@@ -2,6 +2,9 @@
 import { onMounted, reactive, ref } from 'vue'
 import { api } from '@/api/client'
 import type { Destination } from '@/api/types'
+import { pushToast } from '@/lib/toast'
+import { confirmDialog } from '@/lib/confirm'
+import AppIcon from '@/components/AppIcon.vue'
 
 const props = defineProps<{ endpointId: string }>()
 
@@ -12,8 +15,13 @@ const saving = ref(false)
 const draft = reactive({ name: '', targetUrl: '', filterExpr: '' })
 
 async function load() {
-  destinations.value = await api.listDestinations(props.endpointId)
-  loading.value = false
+  try {
+    destinations.value = await api.listDestinations(props.endpointId)
+  } catch {
+    pushToast('Could not load destinations.', 'error')
+  } finally {
+    loading.value = false
+  }
 }
 
 async function create() {
@@ -30,24 +38,43 @@ async function create() {
     draft.targetUrl = ''
     draft.filterExpr = ''
     showForm.value = false
+    pushToast('Destination added', 'success')
+  } catch {
+    pushToast('Could not add destination.', 'error')
   } finally {
     saving.value = false
   }
 }
 
 async function toggle(destination: Destination) {
-  const updated = await api.updateDestination(destination.id, {
-    name: destination.name,
-    targetUrl: destination.targetUrl,
-    filterExpr: destination.filterExpr,
-    active: !destination.active,
-  })
-  Object.assign(destination, updated)
+  try {
+    const updated = await api.updateDestination(destination.id, {
+      name: destination.name,
+      targetUrl: destination.targetUrl,
+      filterExpr: destination.filterExpr,
+      active: !destination.active,
+    })
+    Object.assign(destination, updated)
+  } catch {
+    pushToast('Could not update destination.', 'error')
+  }
 }
 
 async function remove(destination: Destination) {
-  await api.deleteDestination(destination.id)
-  destinations.value = destinations.value.filter((d) => d.id !== destination.id)
+  const ok = await confirmDialog({
+    title: 'Delete destination?',
+    message: `"${destination.name}" will stop receiving forwarded events.`,
+    confirmLabel: 'Delete',
+    danger: true,
+  })
+  if (!ok) return
+  try {
+    await api.deleteDestination(destination.id)
+    destinations.value = destinations.value.filter((d) => d.id !== destination.id)
+    pushToast('Destination deleted', 'success')
+  } catch {
+    pushToast('Could not delete destination.', 'error')
+  }
 }
 
 onMounted(load)
@@ -57,8 +84,9 @@ onMounted(load)
   <section class="card stack">
     <div class="spread">
       <h2>Destinations</h2>
-      <button class="ghost" @click="showForm = !showForm">
-        {{ showForm ? 'Cancel' : 'Add destination' }}
+      <button class="ghost icon-button" @click="showForm = !showForm">
+        <AppIcon :name="showForm ? 'close' : 'plus'" :size="15" />
+        <span>{{ showForm ? 'Cancel' : 'Add destination' }}</span>
       </button>
     </div>
 
@@ -99,10 +127,20 @@ onMounted(load)
             }}</code>
           </div>
           <div class="row">
-            <button class="ghost" @click="toggle(destination)">
-              {{ destination.active ? 'Pause' : 'Resume' }}
+            <button
+              class="ghost icon-only"
+              :aria-label="destination.active ? 'Pause destination' : 'Resume destination'"
+              @click="toggle(destination)"
+            >
+              <AppIcon :name="destination.active ? 'pause' : 'play'" :size="15" />
             </button>
-            <button class="ghost danger" @click="remove(destination)">Delete</button>
+            <button
+              class="ghost danger icon-only"
+              aria-label="Delete destination"
+              @click="remove(destination)"
+            >
+              <AppIcon name="trash" :size="15" />
+            </button>
           </div>
         </div>
       </li>
@@ -123,11 +161,18 @@ onMounted(load)
 .list li {
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
+}
+
+.icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
 }
 
 .url {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--muted);
   word-break: break-all;
   margin-top: 3px;
@@ -136,9 +181,9 @@ onMounted(load)
 .filter {
   display: inline-block;
   margin-top: 6px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--accent-weak);
   color: var(--accent);
 }
