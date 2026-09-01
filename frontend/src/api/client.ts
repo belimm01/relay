@@ -59,7 +59,7 @@ export const api = {
 
   setEndpointActive: (id: string, active: boolean) =>
     request<Endpoint>(`/api/endpoints/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify({ active }),
     }),
 
@@ -83,7 +83,7 @@ export const api = {
     body: { name: string; targetUrl: string; filterExpr?: string | null; active: boolean },
   ) =>
     request<Destination>(`/api/destinations/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(body),
     }),
 
