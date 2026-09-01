@@ -4,6 +4,7 @@ import type {
   Endpoint,
   EventDetail,
   EventSummary,
+  Overview,
   Page,
 } from './types'
 
@@ -47,6 +48,8 @@ async function errorMessage(response: Response): Promise<string> {
 }
 
 export const api = {
+  getOverview: () => request<Overview>('/api/overview'),
+
   listEndpoints: () => request<Endpoint[]>('/api/endpoints'),
 
   getEndpoint: (id: string) => request<Endpoint>(`/api/endpoints/${id}`),

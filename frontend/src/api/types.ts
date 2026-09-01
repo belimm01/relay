@@ -74,3 +74,31 @@ export interface Page<T> {
   totalItems: number
   totalPages: number
 }
+
+export interface OverviewTotals {
+  endpoints: number
+  activeEndpoints: number
+  destinations: number
+  events: number
+}
+
+export interface DeliveryBreakdown {
+  delivered: number
+  pending: number
+  retrying: number
+  failed: number
+  total: number
+}
+
+export interface DailyCount {
+  date: string
+  count: number
+}
+
+export interface Overview {
+  totals: OverviewTotals
+  deliveries: DeliveryBreakdown
+  successRate: number
+  averageLatencyMs: number | null
+  eventsPerDay: DailyCount[]
+}
