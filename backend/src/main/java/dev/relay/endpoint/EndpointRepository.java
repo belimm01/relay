@@ -11,4 +11,8 @@ public interface EndpointRepository extends JpaRepository<Endpoint, UUID> {
     Optional<Endpoint> findByIngestToken(String ingestToken);
 
     List<Endpoint> findByUserIdOrderByCreatedAtDesc(UUID userId);
+
+    long countByUserId(UUID userId);
+
+    long countByUserIdAndActiveTrue(UUID userId);
 }
