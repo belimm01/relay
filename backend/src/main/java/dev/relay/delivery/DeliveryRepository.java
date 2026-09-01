@@ -17,6 +17,13 @@ public interface DeliveryRepository extends JpaRepository<Delivery, UUID> {
 
     List<Delivery> findByEventIdOrderByCreatedAt(UUID eventId);
 
+    @Query("""
+            select d.status, count(d) from Delivery d, Event ev, Endpoint e
+            where d.eventId = ev.id and ev.endpointId = e.id and e.userId = :userId
+            group by d.status
+            """)
+    List<Object[]> countByStatusForUser(@Param("userId") UUID userId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2"))
     @Query("""

@@ -15,6 +15,20 @@ export function relativeTime(iso: string): string {
   return `${Math.round(hours / 24)}d ago`
 }
 
+export function compactNumber(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value)
+}
+
+export function shortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
 export function prettyJson(raw: string | null): string {
   if (!raw) return ''
   try {

@@ -10,6 +10,8 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.1.1",
+    "@fontsource-variable/jetbrains-mono": "^5.1.1",
     "@stomp/stompjs": "^7.0.0",
     "pinia": "^2.2.6",
     "sockjs-client": "^1.6.1",
