@@ -5,9 +5,13 @@ import { api } from '@/api/client'
 import type { Endpoint, EventSummary } from '@/api/types'
 import { relativeTime } from '@/lib/format'
 import { useEventStream } from '@/lib/live'
+import { pushToast } from '@/lib/toast'
+import { confirmDialog } from '@/lib/confirm'
 import CopyButton from '@/components/CopyButton.vue'
 import DestinationsPanel from '@/components/DestinationsPanel.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import SkeletonBlock from '@/components/SkeletonBlock.vue'
+import AppIcon from '@/components/AppIcon.vue'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
@@ -21,13 +25,18 @@ const ingestUrl = computed(() =>
 )
 
 async function load() {
-  const [meta, page] = await Promise.all([
-    api.getEndpoint(props.id),
-    api.listEvents(props.id, 0, 50),
-  ])
-  endpoint.value = meta
-  events.value = page.items
-  loading.value = false
+  try {
+    const [meta, page] = await Promise.all([
+      api.getEndpoint(props.id),
+      api.listEvents(props.id, 0, 50),
+    ])
+    endpoint.value = meta
+    events.value = page.items
+  } catch {
+    pushToast('Could not load this endpoint.', 'error')
+  } finally {
+    loading.value = false
+  }
 }
 
 const { state } = useEventStream(
@@ -40,30 +49,67 @@ const { state } = useEventStream(
 
 async function toggleActive() {
   if (!endpoint.value) return
-  endpoint.value = await api.setEndpointActive(endpoint.value.id, !endpoint.value.active)
+  try {
+    endpoint.value = await api.setEndpointActive(endpoint.value.id, !endpoint.value.active)
+    pushToast(endpoint.value.active ? 'Endpoint resumed' : 'Endpoint paused', 'success')
+  } catch {
+    pushToast('Could not update the endpoint.', 'error')
+  }
 }
 
 async function remove() {
   if (!endpoint.value) return
-  if (!confirm(`Delete endpoint "${endpoint.value.name}" and all its events?`)) return
-  await api.deleteEndpoint(endpoint.value.id)
-  router.push({ name: 'endpoints' })
+  const ok = await confirmDialog({
+    title: 'Delete endpoint?',
+    message: `"${endpoint.value.name}" and all of its captured events will be permanently removed.`,
+    confirmLabel: 'Delete',
+    danger: true,
+  })
+  if (!ok) return
+  try {
+    await api.deleteEndpoint(endpoint.value.id)
+    pushToast('Endpoint deleted', 'success')
+    router.push({ name: 'endpoints' })
+  } catch {
+    pushToast('Could not delete the endpoint.', 'error')
+  }
+}
+
+function methodClass(method: string): string {
+  return `m-${method.toLowerCase()}`
 }
 
 onMounted(load)
 </script>
 
 <template>
-  <div v-if="endpoint" class="stack">
+  <div v-if="loading && !endpoint" class="stack">
+    <SkeletonBlock width="140px" height="14px" />
+    <SkeletonBlock width="40%" height="28px" />
+    <div class="card"><SkeletonBlock width="70%" height="16px" /></div>
+    <div class="columns">
+      <div class="card"><SkeletonBlock height="180px" /></div>
+      <div class="card"><SkeletonBlock height="180px" /></div>
+    </div>
+  </div>
+
+  <div v-else-if="endpoint" class="stack">
     <div>
-      <RouterLink to="/" class="muted">← Endpoints</RouterLink>
+      <RouterLink :to="{ name: 'endpoints' }" class="muted back">
+        <AppIcon name="arrowLeft" :size="15" />
+        Endpoints
+      </RouterLink>
       <div class="spread head">
         <h1>{{ endpoint.name }}</h1>
         <div class="row">
-          <button class="ghost" @click="toggleActive">
-            {{ endpoint.active ? 'Pause' : 'Resume' }}
+          <button class="ghost icon-button" @click="toggleActive">
+            <AppIcon :name="endpoint.active ? 'pause' : 'play'" :size="15" />
+            <span>{{ endpoint.active ? 'Pause' : 'Resume' }}</span>
           </button>
-          <button class="ghost danger" @click="remove">Delete</button>
+          <button class="ghost danger icon-button" @click="remove">
+            <AppIcon name="trash" :size="15" />
+            <span>Delete</span>
+          </button>
         </div>
       </div>
     </div>
@@ -88,9 +134,8 @@ onMounted(load)
           </span>
         </div>
 
-        <p v-if="loading" class="muted">Loading…</p>
         <EmptyState
-          v-else-if="events.length === 0"
+          v-if="events.length === 0"
           title="Waiting for events"
           hint="Send a request to the ingest URL and it will appear here instantly."
         />
@@ -98,7 +143,7 @@ onMounted(load)
           <li v-for="event in events" :key="event.id">
             <RouterLink :to="{ name: 'event', params: { id: event.id } }" class="spread">
               <span class="row">
-                <span class="method">{{ event.method }}</span>
+                <span class="method" :class="methodClass(event.method)">{{ event.method }}</span>
                 <span class="mono ct">{{ event.contentType ?? '—' }}</span>
               </span>
               <span class="muted small">{{ relativeTime(event.receivedAt) }}</span>
@@ -111,6 +156,16 @@ onMounted(load)
 </template>
 
 <style scoped>
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
 .head {
   margin-top: 8px;
 }
@@ -120,7 +175,7 @@ onMounted(load)
   padding: 8px 11px;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   word-break: break-all;
 }
 
@@ -155,32 +210,59 @@ onMounted(load)
 
 .feed a {
   padding: 10px 4px;
+  border-radius: var(--radius-sm);
+  transition: background var(--dur-fast) var(--ease-standard);
 }
 
 .feed a:hover {
-  color: var(--accent);
+  background: var(--surface-2);
 }
 
 .method {
   font-weight: 700;
-  font-size: 12px;
+  font-size: var(--text-xs);
+  letter-spacing: 0.03em;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.m-get {
+  color: var(--status-good);
+  background: color-mix(in srgb, var(--status-good) 14%, transparent);
+}
+
+.m-post {
   color: var(--accent);
+  background: var(--accent-weak);
+}
+
+.m-put,
+.m-patch {
+  color: var(--status-warning);
+  background: color-mix(in srgb, var(--status-warning) 14%, transparent);
+}
+
+.m-delete {
+  color: var(--status-critical);
+  background: color-mix(in srgb, var(--status-critical) 14%, transparent);
 }
 
 .ct {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 
 .small {
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .live {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 
@@ -192,7 +274,7 @@ onMounted(load)
 }
 
 .live.live .dot {
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green);
+  background: var(--status-good);
+  box-shadow: 0 0 8px var(--status-good);
 }
 </style>
