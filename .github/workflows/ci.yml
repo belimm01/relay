@@ -40,6 +40,47 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+  browser:
+    name: Browser flow
+    runs-on: ubuntu-latest
+    env:
+      RELAY_BOOTSTRAP_API_KEY: rk_local_dev_key
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Exercise endpoint-to-replay flow
+        run: |
+          cleanup() { docker compose down --volumes; }
+          trap cleanup EXIT
+          docker compose up --build --detach
+          for attempt in {1..60}; do
+            if curl --fail --silent \
+              --header "X-Api-Key: $RELAY_BOOTSTRAP_API_KEY" \
+              http://localhost:5173/api/endpoints >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "${ready:-}" != 1 ]; then
+            docker compose logs
+            exit 1
+          fi
+          if ! npm --prefix frontend run test:e2e; then
+            docker compose logs
+            exit 1
+          fi
+
   helm:
     name: Helm chart
     runs-on: ubuntu-latest
