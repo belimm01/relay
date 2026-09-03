@@ -56,7 +56,7 @@ Relay makes the whole flow observable and recoverable.
 
 - **Backend** — Java 21, Spring Boot 3.4, PostgreSQL 16, Liquibase
 - **Frontend** — Vue 3, TypeScript, Vite, Pinia
-- **Testing** — JUnit 5, Mockito, AssertJ, Testcontainers
+- **Testing** — JUnit 5, Mockito, AssertJ, Testcontainers, Playwright
 - **Infra** — Docker Compose, GitHub Actions
 
 ## Running it
@@ -112,6 +112,17 @@ Unit tests cover the backoff policy, filter evaluator, and delivery state
 machine. The Testcontainers suite spins up a real Postgres and exercises the
 whole ingest-to-delivery path, including the retry loop, against a stub HTTP
 server.
+
+The browser suite exercises endpoint creation, webhook ingestion, delivery
+visibility, and replay against the complete Docker Compose stack:
+
+```bash
+docker compose up --build -d
+cd frontend
+npx playwright install chromium
+npm run test:e2e
+cd .. && docker compose down --volumes
+```
 
 ## Production engineering
 
