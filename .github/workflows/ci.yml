@@ -44,7 +44,7 @@ jobs:
     name: Browser flow
     runs-on: ubuntu-latest
     env:
-      RELAY_BOOTSTRAP_API_KEY: rk_local_dev_key
+      RELAY_BOOTSTRAP_API_KEY: rk_ci_browser_flow
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
