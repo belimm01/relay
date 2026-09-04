@@ -58,6 +58,8 @@ jobs:
       - name: Install Chromium
         working-directory: frontend
         run: npx playwright install --with-deps chromium
+      - name: Test demo walkthrough
+        run: python3 -m unittest discover -s demo -p 'test_*.py'
       - name: Exercise endpoint-to-replay flow
         run: |
           cleanup() { docker compose down --volumes; }
@@ -80,6 +82,7 @@ jobs:
             docker compose logs
             exit 1
           fi
+          python3 demo/walkthrough.py --exit-after-seed
 
   helm:
     name: Helm chart
