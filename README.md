@@ -102,6 +102,25 @@ curl -X POST http://localhost:8080/in/<ingest-token> \
 
 It shows up on the dashboard immediately.
 
+### Deterministic product walkthrough
+
+Start the stack, then run the standard-library demo script in a second terminal:
+
+```bash
+docker compose up --build -d
+python3 demo/walkthrough.py
+```
+
+The script resets only the endpoint named `Demo orders`, creates a local receiver,
+adds an endpoint and destination, sends three fixed order events, and verifies all
+three deliveries through Relay's API and the receiver. It prints a direct dashboard
+URL and keeps the receiver available so the replay action can be exercised. Press
+Ctrl-C when finished, then remove the demo stack and its database:
+
+```bash
+docker compose down --volumes
+```
+
 ## Tests
 
 ```bash
