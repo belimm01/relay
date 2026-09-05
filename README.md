@@ -36,6 +36,18 @@ Relay makes the whole flow observable and recoverable.
 4. **Observe.** The dashboard streams events as they arrive and shows the full
    delivery timeline for each one. Any event can be replayed with one click.
 
+## Product walkthrough
+
+The deterministic demo creates an endpoint and destination, then captures and
+forwards three fixed order events while the dashboard updates over WebSockets.
+
+![Relay endpoint showing its ingest URL, destination, and live event feed](docs/images/relay-endpoint.png)
+
+Each event retains its request data and delivery history, with replay available
+from the same view.
+
+![Relay event showing its JSON payload and successful delivery attempt](docs/images/relay-delivery.png)
+
 ## Design notes
 
 - **Virtual threads** (Java 21) carry outbound deliveries, so a slow destination
