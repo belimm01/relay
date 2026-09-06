@@ -11,6 +11,7 @@ export function useEventStream(
 ) {
   const state = ref<LiveState>('connecting')
   let client: Client | null = null
+  let stopped = false
 
   function connect() {
     const id = endpointId()
@@ -18,19 +19,21 @@ export function useEventStream(
       webSocketFactory: () => new SockJS('/ws'),
       reconnectDelay: 3000,
       onConnect: () => {
+        if (stopped) return
         state.value = 'live'
         client?.subscribe(`/topic/endpoints/${id}/events`, (message) => {
-          onEvent(JSON.parse(message.body) as EventSummary)
+          if (!stopped) onEvent(JSON.parse(message.body) as EventSummary)
         })
       },
       onWebSocketClose: () => {
-        state.value = 'connecting'
+        if (!stopped) state.value = 'connecting'
       },
     })
     client.activate()
   }
 
   function disconnect() {
+    stopped = true
     state.value = 'closed'
     client?.deactivate()
     client = null
