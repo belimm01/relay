@@ -26,3 +26,7 @@ npm-debug.log*
 coverage/
 *.lcov
 .nyc_output/
+
+# local secrets
+.env.local.relay
+*.local.json
