@@ -4,6 +4,7 @@ import dev.relay.destination.Destination;
 import dev.relay.destination.DestinationRepository;
 import dev.relay.event.Event;
 import dev.relay.event.EventRepository;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -33,6 +34,7 @@ class DeliveryProcessorTest {
     private final Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
     private final BackoffPolicy backoff = new BackoffPolicy(Duration.ofSeconds(1), Duration.ofMinutes(5), () -> 0.0);
     private final DeliveryProperties properties = new DeliveryProperties();
+    private final SimpleMeterRegistry meters = new SimpleMeterRegistry();
 
     private DeliveryProcessor processor;
     private Event event;
@@ -41,7 +43,7 @@ class DeliveryProcessorTest {
 
     @BeforeEach
     void setUp() {
-        processor = new DeliveryProcessor(deliveries, attempts, destinations, events, sender, backoff, properties, clock);
+        processor = new DeliveryProcessor(deliveries, attempts, destinations, events, sender, backoff, properties, clock, meters);
 
         event = Event.builder()
                 .method("POST")
@@ -71,6 +73,10 @@ class DeliveryProcessorTest {
         verify(attempts).save(captor.capture());
         assertThat(captor.getValue().isSucceeded()).isTrue();
         assertThat(captor.getValue().getAttemptNo()).isEqualTo(1);
+
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_DELIVERED)).isEqualTo(1);
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_RETRYING)).isZero();
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_DEAD_LETTERED)).isZero();
     }
 
     @Test
@@ -82,6 +88,10 @@ class DeliveryProcessorTest {
         assertThat(delivery.getStatus()).isEqualTo(DeliveryStatus.RETRYING);
         assertThat(delivery.getAttemptCount()).isEqualTo(1);
         assertThat(delivery.getNextAttemptAt()).isEqualTo(clock.instant().plusMillis(500));
+
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_RETRYING)).isEqualTo(1);
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_DELIVERED)).isZero();
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_DEAD_LETTERED)).isZero();
     }
 
     @Test
@@ -93,6 +103,9 @@ class DeliveryProcessorTest {
 
         assertThat(delivery.getStatus()).isEqualTo(DeliveryStatus.FAILED);
         assertThat(delivery.getNextAttemptAt()).isNull();
+
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_DEAD_LETTERED)).isEqualTo(1);
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_RETRYING)).isZero();
     }
 
     @Test
@@ -103,5 +116,23 @@ class DeliveryProcessorTest {
 
         assertThat(delivery.getStatus()).isEqualTo(DeliveryStatus.FAILED);
         verify(sender, never()).send(any(), any());
+
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_DEAD_LETTERED)).isEqualTo(1);
+    }
+
+    @Test
+    void doesNotCountOutcomeForTerminalDelivery() {
+        delivery.recordSuccess(200, clock.instant());
+
+        processor.process(delivery.getId());
+
+        verify(sender, never()).send(any(), any());
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_DELIVERED)).isZero();
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_RETRYING)).isZero();
+        assertThat(outcomeCount(DeliveryProcessor.OUTCOME_DEAD_LETTERED)).isZero();
+    }
+
+    private double outcomeCount(String outcome) {
+        return meters.counter(DeliveryProcessor.OUTCOME_METRIC, DeliveryProcessor.OUTCOME_TAG, outcome).count();
     }
 }

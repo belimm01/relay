@@ -4,6 +4,7 @@ import dev.relay.destination.Destination;
 import dev.relay.destination.DestinationRepository;
 import dev.relay.event.Event;
 import dev.relay.event.EventRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,12 @@ import java.util.UUID;
 @Component
 public class DeliveryProcessor {
 
+    static final String OUTCOME_METRIC = "relay.deliveries";
+    static final String OUTCOME_TAG = "outcome";
+    static final String OUTCOME_DELIVERED = "delivered";
+    static final String OUTCOME_RETRYING = "retrying";
+    static final String OUTCOME_DEAD_LETTERED = "dead_lettered";
+
     private final DeliveryRepository deliveries;
     private final DeliveryAttemptRepository attempts;
     private final DestinationRepository destinations;
@@ -22,6 +29,7 @@ public class DeliveryProcessor {
     private final BackoffPolicy backoff;
     private final DeliveryProperties properties;
     private final Clock clock;
+    private final MeterRegistry meters;
 
     public DeliveryProcessor(DeliveryRepository deliveries,
                              DeliveryAttemptRepository attempts,
@@ -30,7 +38,8 @@ public class DeliveryProcessor {
                              WebhookSender sender,
                              BackoffPolicy backoff,
                              DeliveryProperties properties,
-                             Clock clock) {
+                             Clock clock,
+                             MeterRegistry meters) {
         this.deliveries = deliveries;
         this.attempts = attempts;
         this.destinations = destinations;
@@ -39,6 +48,7 @@ public class DeliveryProcessor {
         this.backoff = backoff;
         this.properties = properties;
         this.clock = clock;
+        this.meters = meters;
     }
 
     @Transactional
@@ -54,6 +64,7 @@ public class DeliveryProcessor {
         Event event = events.findById(delivery.getEventId()).orElse(null);
         if (event == null) {
             delivery.recordFailure(null, "source event missing", null, true, now);
+            countOutcome(OUTCOME_DEAD_LETTERED);
             return;
         }
 
@@ -61,6 +72,7 @@ public class DeliveryProcessor {
         if (destination == null || !destination.isActive()) {
             recordAttempt(delivery.getId(), attemptNo, SendResult.transportError("destination inactive", 0), now);
             delivery.recordFailure(null, "destination inactive", null, true, now);
+            countOutcome(OUTCOME_DEAD_LETTERED);
             return;
         }
 
@@ -69,11 +81,17 @@ public class DeliveryProcessor {
 
         if (result.success()) {
             delivery.recordSuccess(result.statusCode(), now);
+            countOutcome(OUTCOME_DELIVERED);
         } else {
             boolean exhausted = attemptNo >= properties.getMaxAttempts();
             Instant retryAt = now.plus(backoff.nextDelay(attemptNo));
             delivery.recordFailure(result.statusCode(), result.error(), retryAt, exhausted, now);
+            countOutcome(exhausted ? OUTCOME_DEAD_LETTERED : OUTCOME_RETRYING);
         }
+    }
+
+    private void countOutcome(String outcome) {
+        meters.counter(OUTCOME_METRIC, OUTCOME_TAG, outcome).increment();
     }
 
     private void recordAttempt(UUID deliveryId, int attemptNo, SendResult result, Instant now) {

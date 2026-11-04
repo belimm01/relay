@@ -22,3 +22,5 @@ Destination failures are not Relay availability failures, but exhausted deliveri
 - JVM heap, pause time, and virtual-thread pinning.
 
 Prometheus metrics are exposed at `/actuator/prometheus`; health probes use `/actuator/health/liveness` and `/actuator/health/readiness`.
+
+The delivery pipeline emits `relay_deliveries_total`, a counter tagged `outcome` with the values `delivered`, `retrying`, and `dead_lettered`. One increment is recorded per processed delivery attempt as it reaches a terminal or retry decision, giving the outcome breakdown behind the delivery dashboards and the signal for dead-letter-rate alerting.
