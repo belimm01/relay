@@ -24,3 +24,5 @@ Destination failures are not Relay availability failures, but exhausted deliveri
 Prometheus metrics are exposed at `/actuator/prometheus`; health probes use `/actuator/health/liveness` and `/actuator/health/readiness`.
 
 The delivery pipeline emits `relay_deliveries_total`, a counter tagged `outcome` with the values `delivered`, `retrying`, and `dead_lettered`. One increment is recorded per processed delivery attempt as it reaches a terminal or retry decision, giving the outcome breakdown behind the delivery dashboards and the signal for dead-letter-rate alerting.
+
+The current queue depth is exposed as `relay_deliveries_queue`, a gauge tagged `status` with the values `pending`, `retrying`, `delivered`, and `failed`. Each series reports the number of deliveries currently in that status at scrape time, backing the pending/retrying/exhausted delivery-count panels; `failed` is the exhausted-delivery count that must remain visible and replayable.

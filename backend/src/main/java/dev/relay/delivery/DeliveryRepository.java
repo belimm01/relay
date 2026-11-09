@@ -17,6 +17,8 @@ public interface DeliveryRepository extends JpaRepository<Delivery, UUID> {
 
     List<Delivery> findByEventIdOrderByCreatedAt(UUID eventId);
 
+    long countByStatus(DeliveryStatus status);
+
     @Query("""
             select d.status, count(d) from Delivery d, Event ev, Endpoint e
             where d.eventId = ev.id and ev.endpointId = e.id and e.userId = :userId
